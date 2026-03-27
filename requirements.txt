@@ -1,0 +1,9 @@
+opencv-python-headless
+numpy
+torch
+torchvision
+torchaudio
+ultralytics
+pillow
+transformers
+scipy
