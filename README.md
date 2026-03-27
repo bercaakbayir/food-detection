@@ -10,10 +10,17 @@ A computer vision pipeline for detecting vessels (cups, bowls, etc.), identifyin
 - **Modular Structure**: Clean architecture for easy extensibility.
 
 ## Installation
+### Local (Recommended for MPS/GPU)
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
+
+### Docker (Recommended for Portability)
+```bash
+docker build -t food-detection .
+docker run -v $(pwd):/app food-detection --path data/glass.png
 ```
 
 ## Usage
