@@ -1,35 +1,72 @@
-# Food & Vessel Detection Pipeline
+# 🍲 Food & Vessel Detection Pipeline
 
-A computer vision pipeline for detecting vessels (cups, bowls, etc.), identifying their content, and calculating fullness and physical dimensions.
+[![Docker Build](https://img.shields.io/badge/docker-build-blue?logo=docker)](file:///Users/bercaakbayir/Desktop/projects/food-detection/Dockerfile)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-green?logo=python)](file:///Users/bercaakbayir/Desktop/projects/food-detection/requirements.txt)
 
-## Features
-- **Vessel Detection**: YOLOv10 for robust object detection.
-- **Surface Segmentation**: YOLOv8-seg for food and drink surface masks.
-- **Liquid Level Detection**: Hybrid approach using depth estimation and edge gradients for transparent liquids.
-- **Size Estimation**: Automatic distance calculation based on standard vessel dimensions.
-- **Modular Structure**: Clean architecture for easy extensibility.
+A modular computer vision pipeline designed to detect food vessels (cups, bowls, glasses), estimate their physical dimensions, and calculate the fullness percentage—even for transparent liquids.
 
-## Installation
-### Local (Recommended for MPS/GPU)
+![Detection Result](result.jpg)
+
+---
+
+## 🚀 How It Works
+
+The pipeline follows a multi-stage process to transform a raw image into structured data:
+
+### 1. Vessel Detection (YOLOv10)
+Identify the primary container (cup, bowl, bottle, etc.) in the image. We use **YOLOv10** for its high precision and low latency in bounding box detection.
+
+### 2. Surface Segmentation (YOLOv8-seg)
+Attempt to segment the surface of the food or drink inside the container. This works best for opaque contents like soup, solids, or colored liquids.
+
+### 3. Depth Estimation (Depth-Anything-V2)
+Identify the 3D structure of the scene. This is crucial for:
+- Calculating the **distance** to the object without specialized hardware.
+- Detecting **liquid levels** when the content is transparent (like water).
+
+### 4. Hybrid Liquid Detection (Fallback)
+If standard segmentation fails (common with clear liquids), the pipeline analyzes depth gradients and horizontal edge profiles (meniscus) to identify the fill line inside the detected vessel.
+
+### 5. Metrics Calculation
+- **Distance**: Estimated using standard vessel widths (e.g., a cup is ~8cm) and camera focal length.
+- **Physical Size**: Pixel dimensions are converted to centimeters based on the estimated distance.
+- **Fullness**: Calculated using a vertical extent heuristic from the base of the vessel to the highest detected content level.
+
+---
+
+## 🛠 Installation
+
+### Local Setup (For MPS/GPU Acceleration)
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Docker (Recommended for Portability)
+### Docker Setup (For Portability)
 ```bash
 docker build -t food-detection .
 docker run -v $(pwd):/app food-detection --path data/glass.png
 ```
 
-## Usage
+---
+
+## 📖 Usage
+
+Run the pipeline on any image:
 ```bash
 python main.py --path data/glass.png
 ```
 
-## Project Structure
-- `src/`: Core logic modules.
-- `models/`: YOLO model weights.
-- `data/`: Input images.
-- `main.py`: CLI entry point.
+### CLI Arguments:
+- `--path`: (Required) Path to the input image.
+- `--distance`: (Optional) If provided, bypasses automatic distance estimation for more accuracy.
+- `--device`: (Optional) Force usage of `cpu`, `cuda`, or `mps`.
+
+---
+
+## 📂 Project Structure
+- **`src/`**: Modular logic (detection, depth, metrics, visualization).
+- **`models/`**: Pre-trained YOLO weights.
+- **`data/`**: Sample input images.
+- **`main.py`**: Clean entry point for CLI.
