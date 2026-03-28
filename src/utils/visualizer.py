@@ -18,6 +18,13 @@ class Visualizer:
         return annotated_img
 
     @staticmethod
-    def save(img, output_path="result.jpg"):
+    def save(img, image_name):
+        import os
+        # results/<image-name>/result.jpg
+        base_name = os.path.splitext(os.path.basename(image_name))[0]
+        output_dir = os.path.join("results", base_name)
+        os.makedirs(output_dir, exist_ok=True)
+        
+        output_path = os.path.join(output_dir, "result.jpg")
         cv2.imwrite(output_path, img)
         print(f"Result saved to {output_path}")

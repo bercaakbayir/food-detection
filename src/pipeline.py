@@ -29,7 +29,7 @@ class DetectionPipeline:
         vessels = self.detector.detect_vessels(img_path)
         if not vessels:
             print("No vessel detected.")
-            Visualizer.save(img, "result.jpg")
+            Visualizer.save(img, img_path)
             return
 
         main_vessel = max(vessels, key=lambda x: x['area'])
@@ -76,4 +76,4 @@ class DetectionPipeline:
         # 6. Visualization
         label_text = f"{width_cm:.1f}x{height_cm:.1f}cm | {fullness}% Full | {volume_ml}ml"
         annotated_img = Visualizer.annotate(img, (vx1, vy1, vx2, vy2), content_mask, label_text, surface_found)
-        Visualizer.save(annotated_img, "result.jpg")
+        Visualizer.save(annotated_img, img_path)
