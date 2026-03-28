@@ -37,13 +37,17 @@ If standard segmentation fails (common with clear liquids), the pipeline analyze
 
 ## 🛠 Installation
 
-### Local Setup (Using uv)
-```bash
-# Install uv if you haven't: https://github.com/astral-sh/uv
-uv venv
-source .venv/bin/activate
-uv pip install .
-```
+### Metric Estimation (Reference-Free)
+The pipeline now uses **Metric Depth Estimation** to calculate object sizes without assuming standard dimensions.
+- **Accuracy Note**: For best results, use high-resolution images (1080p+) with original EXIF metadata.
+- **FOV Override**: If results look unrealistic, the camera FOV might be misaligned. You can manually specify it:
+  ```bash
+  docker exec food-volume-detection python main.py --path data/glass.png --fov 55
+  ```
+- **Distance Override**: If you know the exact distance:
+  ```bash
+  docker exec food-volume-detection python main.py --path data/glass.png --distance 30
+  ```
 
 ### Docker Setup (For Portability)
 ```bash
