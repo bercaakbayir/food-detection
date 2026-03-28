@@ -1,92 +1,71 @@
 # 🍲 Food & Vessel Detection Pipeline
 
 [![Docker Build](https://img.shields.io/badge/docker-build-blue?logo=docker)](file:///Users/bercaakbayir/Desktop/projects/food-detection/Dockerfile)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-green?logo=python)](file:///Users/bercaakbayir/Desktop/projects/food-detection/requirements.txt)
+[![Metric Depth](https://img.shields.io/badge/depth-metric-orange?logo=pytorch)](https://huggingface.co/depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf)
 
-A modular computer vision pipeline designed to detect food vessels (cups, bowls, glasses), estimate their physical dimensions, and calculate the fullness percentage—even for transparent liquids.
+A modular computer vision pipeline designed for **reference-free volume estimation**. It detects vessels, calculates real-world dimensions using metric depth maps, and identifies liquid levels even in transparent containers.
 
-![Detection Result](result.jpg)
-
----
-
-## 🚀 How It Works
-
-The pipeline follows a multi-stage process to transform a raw image into structured data:
-
-### 1. Vessel Detection (YOLOv10)
-Identify the primary container (cup, bowl, bottle, etc.) in the image. We use **YOLOv10** for its high precision and low latency in bounding box detection.
-
-### 2. Surface Segmentation (YOLOv8-seg)
-Attempt to segment the surface of the food or drink inside the container. This works best for opaque contents like soup, solids, or colored liquids.
-
-### 3. Depth Estimation (Depth-Anything-V2)
-Identify the 3D structure of the scene. This is crucial for:
-- Calculating the **distance** to the object without specialized hardware.
-- Detecting **liquid levels** when the content is transparent (like water).
-
-### 4. Hybrid Liquid Detection (Fallback)
-If standard segmentation fails (common with clear liquids), the pipeline analyzes depth gradients and horizontal edge profiles (meniscus) to identify the fill line inside the detected vessel.
-
-### 5. Metrics Calculation
-- **Distance**: Estimated using standard vessel widths (e.g., a cup is ~8cm) and camera focal length.
-- **Physical Size**: Pixel dimensions are converted to centimeters based on the estimated distance.
-- **Fullness**: Calculated using a vertical extent heuristic from vessel base to content peak.
-- **Volume**: Estimated in milliliters (ml) using geometric models (cylinders for cups, hemi-ellipsoids for bowls).
+![Detection Result](results/glass/result.jpg)
 
 ---
 
-## 🛠 Installation
+## 🚀 Key Features
 
-### Metric Estimation (Reference-Free)
-The pipeline now uses **Metric Depth Estimation** to calculate object sizes without assuming standard dimensions.
-- **Accuracy Note**: For best results, use high-resolution images (1080p+) with original EXIF metadata.
-- **FOV Override**: If results look unrealistic, the camera FOV might be misaligned. You can manually specify it:
-  ```bash
-  docker exec food-volume-detection python main.py --path data/glass.png --fov 55
-  ```
-- **Distance Override**: If you know the exact distance:
-  ```bash
-  docker exec food-volume-detection python main.py --path data/glass.png --distance 30
-  ```
+### 1. Metric Depth Estimation (Reference-Free)
+The pipeline uses **Depth-Anything-V2-Metric** to predict **absolute distance in meters** for every pixel in the scene. Unlike traditional systems, it does not require a known reference object (like a coin) or hardcoded vessel sizes.
 
-### Docker Setup (For Portability)
-```bash
-docker build -t food-detection .
-docker run -v $(pwd):/app food-detection --path data/glass.png
-```
+### 2. Camera Intrinsics (EXIF Parsing)
+Accuracy in size estimation depends on the camera lens. The system automatically:
+- Reads **EXIF metadata** (Focal Length, 35mm Equivalent) from your photos to calibrate the "vision" scale.
+- Falls back to a standard mobile FOV (65°) if metadata is missing.
+- Allows manual calibration via the `--fov` argument.
 
-### Docker Compose (Persistent Background Container)
-1. **Start the container**:
+### 3. Hybrid Liquid Level Detection
+For transparent containers where standard segmentation fails, a specialized processor analyzes depth gradients and meniscus edge profiles to find the water/drink line.
+
+### 4. Geometric Volume Modeling
+Volume is calculated in **milliliters (ml)** by mapping 2D masks to 3D approximations:
+- **Cups/Glasses**: Modeled as vertical cylinders ($V = \pi r^2 h$).
+- **Bowls**: Modeled as hemi-ellipsoids ($V = \frac{2}{3} \pi r^2 h$).
+
+---
+
+## 🛠 Setup & Usage
+
+### Docker (Recommended)
+This project uses **uv** for ultra-fast dependency management inside the container.
+
+1. **Start the persistent container**:
    ```bash
    docker-compose up -d --build
    ```
-   The container will now stay running in the background as `food-volume-detection`.
 
-2. **Run detection on any image**:
+2. **Run detection**:
    ```bash
    docker exec food-volume-detection python main.py --path data/glass.png
    ```
-   This allows you to run multiple detections without restarting or rebuilding the container.
 
----
-
-## 📖 Usage
-
-Run the pipeline on any image:
-```bash
-python main.py --path data/glass.png
-```
-
-### CLI Arguments:
+### Command Line Arguments:
 - `--path`: (Required) Path to the input image.
-- `--distance`: (Optional) If provided, bypasses automatic distance estimation for more accuracy.
-- `--device`: (Optional) Force usage of `cpu`, `cuda`, or `mps`.
+- `--fov`: (Optional) Manual Field of View override. Use `30-40` for zoomed photos or `65-75` for standard wide shots.
+- `--distance`: (Optional) Manual distance in cm (e.g., `--distance 30`).
+- `--device`: (Optional) `cpu`, `cuda`, or `mps`.
 
 ---
 
 ## 📂 Project Structure
-- **`src/`**: Modular logic (detection, depth, metrics, visualization).
-- **`models/`**: Pre-trained YOLO weights.
-- **`data/`**: Sample input images.
-- **`main.py`**: Clean entry point for CLI.
-- **Fullness & Volume**: Calculates vertical fill and estimates volume in milliliters (ml).
+- **`src/`**: 
+  - `detection/`: YOLOv10 (vessel) and YOLOv8-seg (surface) inference.
+  - `depth/`: Metric depth prediction using Hugging Face Transformers.
+  - `processing/`: Hybrid liquid level detection logic.
+  - `metrics/`: EXIF parsing and geometric volume calculation.
+  - `utils/`: Structured results saving and visualization.
+- **`results/`**: Persistent logs organized by image name (e.g., `results/image_name/result.jpg`).
+- **`main.py`**: Clean entry point for orchestration.
+
+---
+
+## 💡 Best Practices for Accuracy
+- **Resolution**: Use high-resolution (1080p+) original photos from your phone.
+- **Metadata**: Do not strip EXIF data (e.g., via messaging apps) before inputting to the pipeline.
+- **Zoom**: If your photo is cropped or zoomed, use the `--fov` override (e.g., `30`) to compensate for the digital zoom.
