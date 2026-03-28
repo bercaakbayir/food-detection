@@ -50,6 +50,19 @@ docker build -t food-detection .
 docker run -v $(pwd):/app food-detection --path data/glass.png
 ```
 
+### Docker Compose (Persistent Background Container)
+1. **Start the container**:
+   ```bash
+   docker-compose up -d --build
+   ```
+   The container will now stay running in the background as `food-volume-detection`.
+
+2. **Run detection on any image**:
+   ```bash
+   docker exec food-volume-detection python main.py --path data/glass.png
+   ```
+   This allows you to run multiple detections without restarting or rebuilding the container.
+
 ---
 
 ## 📖 Usage

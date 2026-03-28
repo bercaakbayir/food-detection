@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    container_name: food-volume-detection
+    volumes:
+      - .:/app
+    entrypoint: ["tail", "-f", "/dev/null"]
+    tty: true
+    stdin_open: true
