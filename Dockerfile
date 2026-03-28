@@ -15,15 +15,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Install uv for faster dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Install Python dependencies
-# Using the CPU-only index for PyTorch to significantly reduce image size
-RUN pip install --no-cache-dir \
-    --index-url https://download.pytorch.org/whl/cpu \
-    --extra-index-url https://pypi.org/simple \
-    -r requirements.txt
+# Copy dependency files first for better caching
+COPY pyproject.toml .
+
+# Install Python dependencies using uv
+# --system flag ensures dependencies are installed into the system site-packages (since this is a container)
+RUN uv pip install --no-cache --system .
 
 # Copy the rest of the application
 COPY . .

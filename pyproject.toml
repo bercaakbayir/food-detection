@@ -1,0 +1,25 @@
+[project]
+name = "food-detection"
+version = "0.1.0"
+description = "Modular food and vessel detection pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "opencv-python-headless",
+    "numpy",
+    "torch",
+    "torchvision",
+    "torchaudio",
+    "ultralytics",
+    "pillow",
+    "transformers",
+    "scipy",
+]
+
+[tool.uv]
+index-url = "https://download.pytorch.org/whl/cpu"
+extra-index-url = ["https://pypi.org/simple"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

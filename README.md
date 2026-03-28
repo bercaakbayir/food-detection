@@ -37,11 +37,12 @@ If standard segmentation fails (common with clear liquids), the pipeline analyze
 
 ## 🛠 Installation
 
-### Local Setup (For MPS/GPU Acceleration)
+### Local Setup (Using uv)
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Install uv if you haven't: https://github.com/astral-sh/uv
+uv venv
+source .venv/bin/activate
+uv pip install .
 ```
 
 ### Docker Setup (For Portability)
