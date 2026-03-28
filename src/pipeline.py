@@ -65,13 +65,15 @@ class DetectionPipeline:
 
         width_cm, height_cm = Calculator.calculate_dimensions(v_pw, v_ph, distance)
         fullness = Calculator.calculate_fullness(content_mask, (vx1, vy1, vx2, vy2))
+        volume_ml = Calculator.calculate_volume(vessel_label, width_cm, height_cm, fullness)
 
         print(f"\nObject: {vessel_label.upper()}")
         print(f"Size:   {width_cm:.2f} cm wide x {height_cm:.2f} cm high")
         print(f"Dist:   {distance:.1f} cm (estimated)")
         print(f"Fill:   {fullness}% full (detected by {method})")
+        print(f"Volume: {volume_ml} ml (estimated)")
 
         # 6. Visualization
-        label_text = f"{width_cm:.1f}x{height_cm:.1f}cm | {fullness}% Full"
+        label_text = f"{width_cm:.1f}x{height_cm:.1f}cm | {fullness}% Full | {volume_ml}ml"
         annotated_img = Visualizer.annotate(img, (vx1, vy1, vx2, vy2), content_mask, label_text, surface_found)
         Visualizer.save(annotated_img, "result.jpg")

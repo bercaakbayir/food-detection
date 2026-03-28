@@ -30,7 +30,8 @@ If standard segmentation fails (common with clear liquids), the pipeline analyze
 ### 5. Metrics Calculation
 - **Distance**: Estimated using standard vessel widths (e.g., a cup is ~8cm) and camera focal length.
 - **Physical Size**: Pixel dimensions are converted to centimeters based on the estimated distance.
-- **Fullness**: Calculated using a vertical extent heuristic from the base of the vessel to the highest detected content level.
+- **Fullness**: Calculated using a vertical extent heuristic from vessel base to content peak.
+- **Volume**: Estimated in milliliters (ml) using geometric models (cylinders for cups, hemi-ellipsoids for bowls).
 
 ---
 
@@ -70,3 +71,4 @@ python main.py --path data/glass.png
 - **`models/`**: Pre-trained YOLO weights.
 - **`data/`**: Sample input images.
 - **`main.py`**: Clean entry point for CLI.
+- **Fullness & Volume**: Calculates vertical fill and estimates volume in milliliters (ml).

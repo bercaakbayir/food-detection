@@ -33,3 +33,30 @@ class Calculator:
         
         if vessel_v_height <= 0: return 0
         return int(np.clip((content_v_height / vessel_v_height) * 100, 0, 100))
+
+    @staticmethod
+    def calculate_volume(vessel_label, width_cm, height_cm, fullness_pct):
+        """
+        Estimates volume in milliliters (ml) based on vessel geometry and fullness.
+        1 cm^3 = 1 ml
+        """
+        radius = width_cm / 2.0
+        fullness_factor = fullness_pct / 100.0
+        
+        if vessel_label in ['cup', 'wine glass', 'bottle', 'vase']:
+            # Modeling as a cylinder: V = pi * r^2 * h
+            total_volume = np.pi * (radius**2) * height_cm
+            estimated_volume = total_volume * fullness_factor
+        elif vessel_label == 'bowl':
+            # Modeling as a hemi-ellipsoid: V = (2/3) * pi * rx * ry * rz
+            # Assuming rx=ry=radius, rz=height
+            total_volume = (2.0/3.0) * np.pi * (radius**2) * height_cm
+            # For a hemisphere-like shape, fullness isn't linear with height, 
+            # but for simplicity and lack of exact profile, we use linear fill of volume.
+            estimated_volume = total_volume * fullness_factor
+        else:
+            # Default: Simple box-based approximation
+            total_volume = width_cm * width_cm * height_cm * 0.6 # Assuming 60% of bounding box
+            estimated_volume = total_volume * fullness_factor
+            
+        return int(max(0.0, float(estimated_volume)))
